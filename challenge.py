@@ -8,22 +8,35 @@ from brains.rand import RandomBrain
 
 import cProfile
 
-AUTO = True
-PROFILE = False
+PLANTS = 50
+ANIMALS = 40
+PRECALC = 0
+AUTO = True	
+PROFILE = True
 
 def clear():
 	os.system( [ 'clear', 'cls' ][ os.name == 'nt' ] )
 
 world = World();
-for x in range(40):
+
+plants.generate_at_random(world, PLANTS)
+
+if PRECALC > 0:
+	print "Precalculating %i moves..." % PRECALC
+	for x in range(PRECALC):
+		world.iterate()
+
+world.turn = 0
+
+for x in range(ANIMALS):
 	world.spawn(Animal, randrange(world.WIDTH), randrange(world.HEIGHT), RandomBrain())
-plants.generate_at_random(world, 100)
 
 x = ''
 while True:
 	print world
+	print "Turn", world.turn, "Animals", len([actor for actor in world.actors.values() if actor.DESCRIPTION == "animal"])
 	if AUTO:		
-		time.sleep(0.05)
+		pass #time.sleep(0.05)
 	else:
 		x = raw_input("press enter to continue, ctrl-c to quit")
 

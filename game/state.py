@@ -17,6 +17,7 @@ class ObjectState(object):
 
 	def __init__(self, source):
 		self.qualifiers = []
+		self.id = source.id
 		self.x = source.x
 		self.y = source.y
 		self.description = source.DESCRIPTION
@@ -31,6 +32,7 @@ class CellState(ObjectState):
 		super(CellState, self).__init__(source)
 		self.capacity = source.capacity
 		self._passable = source.PASSABLE
+		self.contents = [actor.state for actor in source.contents]
 
 	def passable(self, actor):
 		return self.passable and self.capacity >= actor.size
@@ -41,17 +43,19 @@ class SelfState(ObjectState):
 	def __init__(self, source):
 		super(SelfState, self).__init__(source)
 		surroundings, actors = source.world.surroundings(source, source.eyesight)
-		self.map = MapState(surroundings)
+		self.map = MapState([[cell.state for cell in row] for row in surroundings])
 		self.actors = {}
+		self.age = source.age
 		for actor in actors:
-			if actor.description in self.actors:
-				self.actors[actor.description] = actor
+			if actor.DESCRIPTION in self.actors:
+				self.actors[actor.DESCRIPTION] = actor.state
 			else:
-				self.actors[actor.description] = [actor]
+				self.actors[actor.DESCRIPTION] = [actor.state]
 
 		self.health = source.health
 		self.max_health = source.max_health
 		self.max_energy = source.max_energy
+		self.birth_energy = source.birth_energy
 		self.energy = source.energy
 		self.speed = source.speed
 		self.size = source.size

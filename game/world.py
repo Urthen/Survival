@@ -6,15 +6,16 @@ class Actor(object):
 	SYMBOL = '?'	
 	COLOR = "WHITE"
 	PRIORITY = 0
+	id_count = 0
 
 	def __init__(self, world, x, y):
 		self.x = x
 		self.y = y
 		self.world = world
 		self.size = 1
-
-	def __cmp__(self, other):
-		return cmp(self.PRIORITY, other.PRIORITY)
+		self.age = 0
+		self.id = "%s-%i" % (self.DESCRIPTION, self.id_count)
+		self.__class__.id_count += 1
 
 	def move(self, x, y):
 		self.world.move(self, x, y)
@@ -24,14 +25,18 @@ class Actor(object):
 		return ObjectState(self)
 
 	def iterate(self):
-		pass
+		self.age += 1
+
+	def die(self):
+		self.world.remove(self)
 
 class Cell(object):
 	DESCRIPTION = "barren"
 	COLOR = "RESET"
 	PASSABLE = True
 
-	def __init__(self, world, x, y):
+	def __init__(self, world, x, y):	
+		self.id = "%i,%i" % (x, y)
 		self.x = x
 		self.y = y
 		self.world = world
@@ -43,7 +48,7 @@ class Cell(object):
 		self.state = CellState(self)
 
 	def remove(self, obj):
-		self.contents.remove(obj)
+		self.contents.remove(obj) 
 		self.state = CellState(self)
 
 	@property
@@ -71,7 +76,8 @@ class World(object):
 	HEIGHT = 40
 
 	def __init__(self):
-		self.actors = []
+		self.actors = {}
+		self.turn = 0
 		self._map = [[Cell(self, x, y) for x in range(0, self.WIDTH)] for y in range(0, self.HEIGHT)]
 
 	def __str__(self):
@@ -115,12 +121,13 @@ class World(object):
 	def surroundings(self, center, dist):
 		surroundings = []
 		actors = []
+		
 		for y in range(center.y - dist, center.y + dist + 1):
 			row = []
 			for x in range(center.x - dist, center.x + dist + 1):
 				cell = self.map(x, y)
-				row.append(cell.state)
-				actors.extend([actor.state for actor in cell.contents])
+				row.append(cell)
+				actors.extend([actor for actor in cell.contents])
 			surroundings.append(row)
 		return surroundings, actors
 
@@ -135,8 +142,13 @@ class World(object):
 	def spawn(self, actor, x, y, *args, **kwargs):
 		x, y = self.bound(x, y)
 		obj = actor(self, x, y, *args, **kwargs)
-		self.actors.append(obj)
+		self.actors[obj.id] = obj
 		self._map[y][x].add(obj)
+		return obj
+
+	def remove(self, actor):
+		self._map[actor.y][actor.x].remove(actor)
+		del self.actors[actor.id]
 
 	def move(self, actor, x, y):
 		self._map[actor.y][actor.x].remove(actor)
@@ -145,5 +157,6 @@ class World(object):
 		self._map[y][x].add(actor)
 
 	def iterate(self):
-		for thing in self.cells + self.actors:
+		self.turn += 1
+		for thing in self.cells + self.actors.values():
 			thing.iterate()

@@ -2,26 +2,46 @@ from random import random, randrange
 
 from world import Actor
 from state import SelfState
-from brains.base import DIRECTION
+from util import DIRECTION
 
 class Animal(Actor):
+	SYMBOL = "G"
 	DESCRIPTION = "animal"
+	COLOR = "RED"
 
 	def __init__(self, world, x, y, brain):
 		super(Animal, self).__init__(world, x, y)
 		self.brain = brain
 		self.max_health = 100
 		self.max_energy = 200
-		self.energy = 100
+		self.birth_energy = 120
+		self.energy = 30
 		self.health = 100
 		self.speed = 1
 		self.eyesight = 10
 
-		self.ACTIONS = {
-			"move": self.handleMove
-		}
-
 	def iterate(self):
+		super(Animal, self).iterate()
+
+		if self.age > 100:
+			self.max_health -= 2
+			self.max_energy -= 2
+			self.health -= 2
+		else:
+			self.health += 1
+
+		self.energy -= 1
+		if self.energy <= 0:
+			self.health -= 15
+		elif self.energy > self.max_energy:
+			self.energy = self.max_energy
+
+		if self.health <= 0:
+			self.die()
+			return
+		elif self.health > self.max_health:
+			self.health = self.max_health
+
 		state = SelfState(self)
 		response = self.brain.iterate(state)
 
@@ -31,10 +51,10 @@ class Animal(Actor):
 		self.moves = 0
 
 		for action, value in response:
-			if action in self.ACTIONS:
-				self.ACTIONS[action](value)
+			if hasattr(self, "handle_" + action):
+				getattr(self, "handle_" + action)(value)
 
-	def handleMove(self, move):
+	def handle_move(self, move):
 		self.moves += 1
 		if self.moves > self.speed:
 			print "Attempted to move too far."
@@ -44,5 +64,17 @@ class Animal(Actor):
 			tx, ty = self.world.bound(*[x + y for x, y in zip([self.x, self.y], DIRECTION[move])])
 			if self.world.map(tx, ty).passable(self.size):
 				self.move(tx, ty)
+				self.energy -= 1
 		else:
 			print "{0} is not a valid direction, ignoring move.".format(move)
+
+	def handle_eat(self, target):
+		if target.id in self.world.actors:
+			self.world.actors[target.id].food -= 1
+			self.energy += 4
+
+	def handle_birth(self, amount):
+		if self.energy >= self.birth_energy * amount:
+			self.energy -= self.birth_energy * amount
+			for i in range(amount):
+				self.world.spawn(Animal, self.x, self.y, self.brain.__class__())
