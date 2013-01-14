@@ -12,7 +12,7 @@ PLANTS = 50
 ANIMALS = 40
 PRECALC = 0
 AUTO = True	
-PROFILE = True
+PROFILE = False
 
 def clear():
 	os.system( [ 'clear', 'cls' ][ os.name == 'nt' ] )
@@ -42,7 +42,7 @@ while True:
 
 	if PROFILE:
 		clear()		
-		cProfile.run("for i in range(1, 10): world.iterate()")
+		cProfile.run("for i in range(10): world.iterate()")
 	else:
 		world.iterate()
 		clear()

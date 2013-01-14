@@ -4,10 +4,31 @@ from world import Actor
 from state import SelfState
 from util import DIRECTION
 
-class Animal(Actor):
-	SYMBOL = "G"
-	DESCRIPTION = "animal"
+class Corpse(Actor):
+	SYMBOL = "c"
+	DESCRIPTION = "corpse"
 	COLOR = "RED"
+	SIZE = 0.4
+
+	def __init__(self, world, x, y, meat):
+		super(Corpse, self).__init__(world, x, y)
+		self.meat = meat
+
+	def iterate(self):
+		super(Corpse, self).iterate()
+
+		if self.age % 10 == 0:
+			self.meat -= 1
+
+		if self.meat <= 0:
+			self.die()
+
+class Animal(Actor):
+	SYMBOL = "M"
+	DESCRIPTION = "animal"
+	COLOR = "MAGENTA"
+	STYLE = "BRIGHT"
+	SIZE = 0.5
 
 	def __init__(self, world, x, y, brain):
 		super(Animal, self).__init__(world, x, y)
@@ -20,6 +41,10 @@ class Animal(Actor):
 		self.speed = 1
 		self.eyesight = 10
 
+	def die(self):
+		super(Animal, self).die()
+		self.world.spawn(Corpse, self.x, self.y, int(self.max_energy / 50))
+
 	def iterate(self):
 		super(Animal, self).iterate()
 
@@ -27,6 +52,7 @@ class Animal(Actor):
 			self.max_health -= 2
 			self.max_energy -= 2
 			self.health -= 2
+			self.energy -= 1
 		else:
 			self.health += 1
 
