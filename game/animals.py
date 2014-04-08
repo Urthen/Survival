@@ -10,17 +10,17 @@ class Corpse(Actor):
 	COLOR = "RED"
 	SIZE = 0.4
 
-	def __init__(self, world, x, y, meat):
+	def __init__(self, world, x, y, food):
 		super(Corpse, self).__init__(world, x, y)
-		self.meat = meat
+		self.food = food
 
 	def iterate(self):
 		super(Corpse, self).iterate()
 
 		if self.age % 10 == 0:
-			self.meat -= 1
+			self.food -= 1
 
-		if self.meat <= 0:
+		if self.food <= 0:
 			self.die()
 
 class Animal(Actor):
@@ -34,9 +34,9 @@ class Animal(Actor):
 		super(Animal, self).__init__(world, x, y)
 		self.brain = brain
 		self.max_health = 100
-		self.max_energy = 200
-		self.birth_energy = 120
-		self.energy = 30
+		self.max_energy = 300
+		self.birth_energy = 150
+		self.energy = 40
 		self.health = 100
 		self.speed = 1
 		self.eyesight = 10
@@ -90,14 +90,16 @@ class Animal(Actor):
 			tx, ty = self.world.bound(*[x + y for x, y in zip([self.x, self.y], DIRECTION[move])])
 			if self.world.map(tx, ty).passable(self.size):
 				self.move(tx, ty)
-				self.energy -= 1
+				self.energy -= 2
 		else:
 			print "{0} is not a valid direction, ignoring move.".format(move)
 
 	def handle_eat(self, target):
 		if target.id in self.world.actors:
-			self.world.actors[target.id].food -= 1
-			self.energy += 4
+			target = self.world.actors[target.id]
+			if hasattr(target, "food") and target.food > 0:
+				target.food -= 1
+				self.energy += target.CALORIES
 
 	def handle_birth(self, amount):
 		if self.energy >= self.birth_energy * amount:

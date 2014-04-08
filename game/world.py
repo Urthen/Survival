@@ -8,6 +8,7 @@ class Actor(object):
 	SYMBOL = '?'	
 	COLOR = "WHITE"
 	STYLE = "NORMAL"
+	CALORIES = 0
 	PRIORITY = 0
 	id_count = 0
 

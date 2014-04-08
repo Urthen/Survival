@@ -8,6 +8,7 @@ class Plant(Actor):
 	DESCRIPTION = "plant"
 	SYMBOL = "P"
 	COLOR = "BLACK"
+	CALORIES = 5
 
 	def __init__(self, world, x, y):
 		super(Plant, self).__init__(world, x, y)
@@ -59,7 +60,6 @@ class Forest(Cell):
 				target = self.world.map(self.x + direction[0], self.y + direction[1])
 				if random() < 0.1 and type(target) is Cell:
 					target.replace(Forest)
-
 
 		if self.growth > 50:
 			self.growth = 50
